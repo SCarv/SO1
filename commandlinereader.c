@@ -1,28 +1,60 @@
-#include <string.h> 
+/*
+// Command line reader (header file), version 2
+// Sistemas Operativos, DEI/IST/ULisboa 2015-16
+*/
+
+#include <string.h>
 #include <stdio.h>
-#include "commandlinereader.h"
 
-int commandlinereader(char input[], char* tokens[], int argc_max)
-{				
- 	        
-        char* token;						    /* cada token encontrado */
-        const char delimiters[] =" \t\n";		/* caracteres que acabam strtok */
-        int numtokens = 0;						/* indice do array */
+/* 
+Reads up to 'vectorSize' space-separated arguments from the standard input
+and saves them in the entries of the 'argVector' argument.
+This function returns once enough arguments are read or the end of the line 
+is reached
 
-        token = strtok(input, delimiters); 		/* este token e o comando */
+Arguments: 
+ 'argVector' should be a vector of char* previously allocated with
+ as many entries as 'vectorSize'
+ 'vectorSize' is the size of the above vector. A vector of size N allows up to 
+ N-1 arguments to be read; the entry after the last argument is set to NULL.
 
-        //for (numtokens = 0; numtokens <= argc_max && token != NULL ; numtokens++)
-	    /* Preencher o vector tokens com todos os tokens encontrados, 
-         * ate ultrapassar o tamanho do vector ou chegar a um NULL.    
-	     * etc
-	     */
-        while ((tokens[numtokens++] = token) && numtokens < argc_max+2) 
-            token = strtok(NULL, delimiters);
+Return value:
+ The number of arguments that were read, or -1 if some error occurred.
+*/
 
-        if (token != NULL) // se houver demasiados argumentos 
-            return -1;
+int readLineArguments(char **argVector, int vectorSize)
+{
+  int numtokens = 0;
+  char *s = " \n\t";
 
-        return numtokens;
+  char *str = NULL;
+  size_t size = 0;
+  int i;
+
+  char *token;
+
+  if (argVector == NULL || vectorSize == 0)
+    return 0;
+
+  if (getline(&str, &size, stdin) < 0) {
+    return -1;
+  }
+   
+  /* get the first token */
+  token = strtok(str, s);
+   
+  /* walk through other tokens */
+  while( numtokens < vectorSize-1 && token != NULL ) {
+    argVector[numtokens] = token;
+    numtokens ++;
+    
+    token = strtok(NULL, s);
+  }
+   
+  for (i = numtokens; i<vectorSize; i++) {
+    argVector[i] = NULL;
+  }
+   
+  return numtokens;
 }
-
 

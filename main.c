@@ -1,75 +1,58 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/wait.h>
-#include <errno.h>
 
-#include "par_run.h"
 #include "commandlinereader.h"
+#include "par_run.h"
 
-#define MAX_ARGC 7
+#define MAX_ARG 7
 
-int main(int argc, char* argv[])
-{
-	int processes_num = 0;	
-	int argc_child;
-    
+int main(int argc, char* argv[]) {
 
-	char* input = NULL; // for use in getline
+	int num_children = 0, status;
+	char* argVector[MAX_ARG]; 
 
-    size_t input_size = 0;
+	puts("<< PAR-SHELL READY >>");
 
-    char* argv_child[MAX_ARGC+2];
+	for(;;) {
 
-    int commands_given = 0;
+		int numtokens = readLineArguments(argVector, MAX_ARG);
 
-    for (;;)
-
-	{
-        
-        printf("        <<[%d] PAR-SHELL NOW ACCEPTING INPUT>>\n", commands_given);	
-
-        getline(&input, &input_size, stdin);   
-
-        argc_child = commandlinereader(input, argv_child, MAX_ARGC);
-
-
-        if (argv_child[0] == NULL) //nothing entered
-        {
-               puts("(got nothing)");         
-               continue;
-        }
-
-
-        else if (argc_child == -1) //too many arguments
-        {
-            printf("Too many arguments. Maximum is %d.\n", MAX_ARGC-2);            
-            continue;
-        }
-
-
-	    else if (!strcmp(argv_child[0], "exit")) // user enters "exit"
-	    {
-		int a = 0;
-		int array[processes_num];
-		    while (a < processes_num){
-		        array[a++] = wait(NULL);
-		    }
-		a = 0;
-		while(a < processes_num){
-			printf("%d\n", array[a++]);
+		if (numtokens == -1) {
+			perror("par-shell: readLineArguments failed");
+			continue; // salta para a proxima interacao se houver erro
 		}
-            break;
-	    }   
 
+		else if (numtokens == 0) {
+			puts("(Got nothing)");
+			continue;
+		}
 
-        else{	//user enters anything
-		pid_t pid = par_run(argv_child);
-		++commands_given;
-		if (pid != -1) ++processes_num; 
+		else if (!strcmp(argVector[0], "exit")) {
 
+			int i;
+			int datav_child[num_children][2]; // vector to save pid and status of each child terminated
+
+			for (i = 0; i < num_children ; i++) {
+
+				if ((datav_child[i][0] = wait(&status)) == -1) // Wait for all processes. If wait fails, break.
+				{
+					perror("par-shell: wait failed");
+					num_children--;
+					continue;
+				}
+				
+				datav_child[i][1] = status;
+			}
+
+			for (i = 0; i < num_children; i++)
+				printf("Process %d finished with status %d.\n", datav_child[i][0], datav_child[i][1]);
+
+			break;
+		}
+
+		else if (par_run(argVector) != -1) num_children++;
 	}
-    }
 
-    return 0;
+	return 0;	
 }
-
