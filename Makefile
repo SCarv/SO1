@@ -14,6 +14,3 @@ par_run.o: par_run.c commandlinereader.h par_run.h
 
 clean:
 	rm -i *.o
-
-love:
-	# Not war.
