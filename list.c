@@ -23,8 +23,10 @@ void lst_destroy(list_t *list)
 {
 	struct lst_iitem *item, *nextitem;
 
+	if (!list) return;
+
 	item = list->first;
-	while (item != NULL){
+	while (item) {
 		nextitem = item->next;
 		free(item);
 		item = nextitem;
@@ -37,16 +39,16 @@ time_t get_process_time(list_t *list, int pid)
 	lst_iitem_t *item;
 	item = list->first;
 	while(item->pid != pid){
-		item = item->next;	
-	}	   
+		item = item->next;
+	}
 	return item->endtime - item->starttime;
-}				 
+}
 
 void insert_new_process(list_t *list, int pid, time_t starttime)
 {
 	lst_iitem_t *item;
 
-	item = (lst_iitem_t *) malloc (sizeof(lst_iitem_t));
+	item = (lst_iitem_t *) malloc(sizeof(lst_iitem_t));
 	item->pid = pid;
 	item->starttime = starttime;
 	item->endtime = 0;
@@ -70,10 +72,12 @@ void lst_print(list_t *list)
 	lst_iitem_t *item;
 	int totaltime;
 
+	if (!list) return;
+
 	item = list->first;
-	while (item != NULL) {
+	while (item) {
 		totaltime = item->endtime - item->starttime;
-		printf("Process %d finished with execution time: %d s\n", item->pid, totaltime);
+		printf("Process %u finished with execution time: %d s\n", item->pid, totaltime);
 		item = item->next;
 	}
 }

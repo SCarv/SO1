@@ -40,7 +40,7 @@ Arguments:
 Return value:
 The number of arguments that were read; -1 if any argument evals to false,
 because we can't do anything like that.*/
-int get_child_argv(char* argv[], size_t argv_size, int par_shell_in)
+int get_child_argv(char* argv[], size_t argv_size)
 {
         char* token;			    // each read token from input. 
         const char delimiters[] =" \t\n";   // strtok-ending characters
@@ -48,8 +48,9 @@ int get_child_argv(char* argv[], size_t argv_size, int par_shell_in)
         static char* command_line = NULL;
         static size_t command_size = 0;
         
-        FILE* psin = fdopen(par_shell_in, "r");
+        FILE* psin = fopen("/tmp/par-shell-in", "r");
         getline(&command_line, &command_size, psin);
+        fgetc(psin);
         fclose(psin);
         
         if (!command_line || !argv || !argv_size) return -1;
@@ -59,10 +60,9 @@ int get_child_argv(char* argv[], size_t argv_size, int par_shell_in)
         /* Preencher o vector argv com todos os tokens encontrados
          * ate ultrapassar o tamanho do vector ou chegar a um NULL. */
         for (argc = 0; argc < argv_size-1 && token != NULL; argc++) {
-        
                 argv[argc] = token;
                 token = strtok(NULL, delimiters);
-        } free(command_line);
+        }
         
         /* Fill all remaining spaces with null terminators. */
         for (i = argc; i < argv_size; i++) argv[i] = NULL;
@@ -91,7 +91,7 @@ void par_run(char* argVector[])
                 exit(EXIT_FAILURE); // better way of exiting.       
 	}
 	
-	if (pid > 0) perror("par-shell: unable to fork");
+	if (pid < 0) perror("par-shell: unable to fork");
 	
 	else regist_fork(pid, time(NULL));
 }
@@ -102,6 +102,7 @@ void exitglobal(int signo)
         threading_cleanup();
         lst_print(children_list);
 	lst_destroy(children_list);
+	unlink("/tmp/par-shell-in");
 	exit(EXIT_SUCCESS);
 }
 
@@ -111,6 +112,7 @@ int main()
 	   Use: get_current_dir_name(). But you have to make buffers etc.*/
 	char* argv[CHILD_ARGV_SIZE];
 
+        unlink("/tmp/par-shell-in");
         int par_shell_in = mkfifo("/tmp/par-shell-in", S_IRUSR | S_IWUSR);
         if (par_shell_in > 0) perror ("couldn't create FIFO."), exit(1);
         
@@ -121,7 +123,7 @@ int main()
 	/* Main loop. The program's main logic is dictated next. */
         for(;;) {
         
-                switch (get_child_argv(argv, CHILD_ARGV_SIZE, par_shell_in)) {
+                switch (get_child_argv(argv, CHILD_ARGV_SIZE)) {
                         
                         case -1: perror(EMSG_INPUT);
                         case 0: continue;

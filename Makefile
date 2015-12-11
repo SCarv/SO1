@@ -9,32 +9,29 @@ CFLAGS=-pthread -Wall -Werror -g
 
 all: par-shell par-shell-terminal
 
-par-shell-terminal: par-shell-terminal.o par_sync.o
-	$(CC) $(CFLAGS) -o par-shell-terminal par-shell-terminal.o par_sync.o
+par-shell-terminal: par-shell-terminal.c 
+	$(CC) $(CFLAGS) -o par-shell-terminal par-shell-terminal.c
 
-par-shell-terminal.o: par-shell-terminal.c 
-	$(CC) $(CFLAGS) -c -o par-shell-terminal.o par-shell-terminal.c
+par-shell: list.o remotes.o coordination.o monitor.o par-shell.o 
+	$(CC) $(CFLAGS) -o par-shell list.o remotes.o coordination.o monitor.o par-shell.o
 
-par-shell: list.o remotes.o par_sync.o par_wait.o main.o 
-	$(CC) $(CFLAGS) -o par-shell list.o remotes.o par_sync.o par_wait.o main.o
+par-shell.o: par-shell.c coordination.h list.h remotes.h
+	$(CC) $(CFLAGS) -c -o par-shell.o par-shell.c
 
-main.o: main.c par_sync.h list.h remotes.h
-	$(CC) $(CFLAGS) -c -o main.o main.c
+coordination.o: coordination.c monitor.h coordination.h list.h
+	$(CC) $(CFLAGS) -c -o coordination.o coordination.c
 
-par_sync.o: par_sync.c par_wait.h par_sync.h list.h
-	$(CC) $(CFLAGS) -c -o par_sync.o par_sync.c
+monitor.o: monitor.c monitor.h coordination.h
+	$(CC) $(CFLAGS) -c -o monitor.o monitor.c
 
-par_wait.o: par_wait.c par_wait.h par_sync.h
-	$(CC) $(CFLAGS) -c -o par_wait.o par_wait.c
-
-remotes.o: remotes.c remotes.h par_wait.h
+remotes.o: remotes.c remotes.h monitor.h
 	$(CC) $(CFLAGS) -c -o remotes.o remotes.c
 
 list.o: list.c list.h
 	$(CC) $(CFLAGS) -c list.c
 
 clean:
-	rm *.o
+	rm *.o *.txt
 
 fibonacci: fibonacci.c
 	$(CC) fibonacci.c -o fibonacci
@@ -46,4 +43,4 @@ test: par-test.sh fibonacci par-shell
 	./par-test.sh
 
 delete:
-	rm fibonacci par-shell
+	rm fibonacci par-shell par-shell-terminal
