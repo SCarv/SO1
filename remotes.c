@@ -61,7 +61,7 @@ void acknowledge(char* argv[])
         // argv[1] should say "regist"
 	char* in_path = argv[2];
         char* out_path = argv[3];
-        
+	puts(in_path); puts(out_path); puts(argv[0]);
         struct remote* new = new_remote(pid, in_path, out_path);
         insert_remote(new);
 }

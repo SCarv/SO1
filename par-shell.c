@@ -15,7 +15,7 @@
 
 #define BUFFER_SIZE 128
 #define CHILD_ARGV_SIZE 7
-#define PAR_SHELL_IN_PATH "/tmp/par-shell-in"
+#define PAR_SHELL_IN_PATH "in"
 
 static list_t* children_list;
 

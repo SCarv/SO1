@@ -18,20 +18,20 @@
 void input_error()
 {
         perror(EMSG_INPUT);
-        exit(EXIT_FAILURE); 
+        exit(EXIT_FAILURE);
 }
 
 void pipe_error()
 {
         perror(EMSG_PIPE);
-        exit(EXIT_FAILURE); 
+        exit(EXIT_FAILURE);
 }
 
 void regist_self(char* par_shell_in, char* par_shell_out)
 {
-        FILE* psin = fopen(par_shell_in, "w");        
+        FILE* psin = fopen(par_shell_in, "w");
         if (!psin) pipe_error();
-        fprintf(psin, "%d %s", getpid(), par_shell_out);
+        fprintf(psin, "%u regist %s", getpid(), par_shell_out);
         fclose(psin);
 }
 
@@ -66,7 +66,7 @@ int main()
 {
         char* input = NULL; // for getline
         size_t size = 0; // for getline
-        size_t input_len; 
+        size_t input_len;
         
         printf(MSG_IN);
         if (getline(&input, &size, stdin) < 0) input_error();
@@ -90,14 +90,15 @@ int main()
                 
                 if (input_len < 0) perror(EMSG_INPUT);
                 
-                else if (input_len > 0) { 
+                else if (input_len > 0) {
                 
                         if (!strncmp("exit", input, 4)) break;
-                        
-                        else if (!strncmp("stats", input, 5)) 
-                        get_stats(par_shell_in_path, par_shell_out_path, &input, &size);
+
+                        else if (!strncmp("stats", input, 5))
+                        	get_stats(par_shell_in_path, par_shell_out_path, &input, &size);
+
+			else command(input, par_shell_in_path);
                 }
         }
-        
         return EXIT_SUCCESS;
 }
